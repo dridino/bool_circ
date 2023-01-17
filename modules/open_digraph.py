@@ -12,6 +12,7 @@ class node:
         self.children = children
 
     def __str__(self):
+        """string"""
         return f"identif: {self.id} | label : {self.label}"
 
     def __repr__(self):
