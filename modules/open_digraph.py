@@ -52,10 +52,10 @@ class node:
 
         Parameters
         ----------
-        identif : any
+        identif : int
             The node's id
         """
-        res = self.children.get(identif)
+        res: int | None = self.children.get(identif)
         return res if res != None else -1
 
     def get_parent_multiplicity(self, identif: int) -> int:
@@ -64,10 +64,10 @@ class node:
 
         Parameters
         ----------
-        identif : any
+        identif : int
             The node's id
         """
-        res = self.parents.get(identif)
+        res: int | None = self.parents.get(identif)
         return res if res != None else -1
 
     def set_id(self, identif: int) -> None:
@@ -76,7 +76,7 @@ class node:
 
         Parameters
         ----------
-        identif: any
+        identif: int
             The new id
         """
         self.identif = identif
@@ -92,31 +92,31 @@ class node:
         """
         self.label = lab
 
-    def set_parent_ids(self, ids: list) -> None:
+    def set_parent_ids(self, ids: list[int]) -> None:
         """
         Set this nodes parent ids to `ids`.
 
         Parameters
         ----------
-        ids: list
+        ids: list[int]
             The new list of parents ids.
         """
         for i in range(min(len(self.parents), len(ids))):
-            k = list(self.parents.keys())[i]
+            k: int = list(self.parents.keys())[i]
             self.parents[ids[i]] = self.parents[k]
             self.parents.pop(k)
 
-    def set_children_ids(self, ids: list) -> None:
+    def set_children_ids(self, ids: list[int]) -> None:
         """
         Set this nodes parent ids to `ids`.
 
         Parameters
         ----------
-        ids: list
+        ids: list[int]
             The new list of children ids.
         """
         for i in range(min(len(self.children), len(ids))):
-            k = list(self.children.keys())[i]
+            k: int = list(self.children.keys())[i]
             self.children[ids[i]] = self.children[k]
             self.parents.pop(k)
 
@@ -126,7 +126,7 @@ class node:
 
         Parameters
         ----------
-        identif: any
+        identif: int
             The id to add to the children ids list.
         """
         if identif in self.children.keys():
@@ -140,7 +140,7 @@ class node:
 
         Parameters
         ----------
-        identif: any
+        identif: int
             The id to add to the parents ids list.
         """
         if identif in self.parents.keys():
@@ -154,7 +154,7 @@ class node:
 
         Parameters
         ----------
-        identif: any
+        identif: int
             The id of the parent node that should be removed once.
         """
         if identif in self.get_parents_ids():
@@ -168,7 +168,7 @@ class node:
 
         Parameters
         ----------
-        identif: any
+        identif: int
             The id of the child node that should be removed once.
         """
         if identif in self.get_children_ids():
@@ -182,7 +182,7 @@ class node:
 
         Parameters
         ----------
-        identif: any
+        identif: int
             The id of the parent node that should be totally removed.
         """
         for _ in range(self.parents[identif]):
@@ -194,7 +194,7 @@ class node:
 
         Parameters
         ----------
-        identif: any
+        identif: int
             The id of the child node that should be totally removed.
         """
         for _ in range(self.children[identif]):
@@ -214,14 +214,14 @@ class open_digraph:  # for opened directed graph
 
     def __str__(self) -> str:
         """Return the string representation of that node."""
-        s = f"inputs : {self.inputs} | outputs : {self.outputs}\n"
+        s: str = f"inputs : {self.inputs} | outputs : {self.outputs}\n"
         for _, v in self.nodes.items():
             s += str(v) + "\n"
         return s
 
     def __repr__(self) -> str:
         """Return a string that represents this node as an object."""
-        s = f"inputs : {self.inputs} | outputs : {self.outputs}\n"
+        s: str = f"inputs : {self.inputs} | outputs : {self.outputs}\n"
         for _, v in self.nodes.items():
             s += repr(v)
         return s
@@ -343,7 +343,7 @@ class open_digraph:  # for opened directed graph
             self.outputs += [identif]
 
     def new_id(self) -> int:
-        """Return a unused id."""
+        """Return an unused id."""
         return max(list(self.nodes.keys())) + 1
 
     def add_edge(self, src: int, tgt: int) -> None:
@@ -367,7 +367,7 @@ class open_digraph:  # for opened directed graph
 
         Parameters
         ----------
-        edges : list[tuple[int]]
+        edges : list[tuple[int, int]]
             The list of edges such as `[(src, tgt), (src, tgt), ...]`.
         """
         for src, tgt in edges:
@@ -382,15 +382,15 @@ class open_digraph:  # for opened directed graph
         label : str
             The node's `label`.
 
-        parents : list[int]
+        parents : dict[int, int] | None
             The node's `parents`.
 
-        children : list[int]
+        children : dict[int, int] | None
             The node's `children`.
         """
-        identif = self.new_id()
-        n = node(identif, label, {} if parents ==
-                 None else parents, {} if children == None else children)
+        identif: int = self.new_id()
+        n: node = node(identif, label, {} if parents ==
+                       None else parents, {} if children == None else children)
         self.nodes[identif] = n
         if parents != None:
             for k, v in parents.items():
@@ -441,7 +441,7 @@ class open_digraph:  # for opened directed graph
         identif : int
             The node's we want to remove id.
         """
-        u = self.get_node_by_id(identif)
+        u: node = self.get_node_by_id(identif)
         for i in u.get_children_ids():
             self.remove_parallel_edges(identif, i)
         for j in u.get_parents_ids():
@@ -453,7 +453,7 @@ class open_digraph:  # for opened directed graph
 
         Parameters
         ----------
-        l : list[tuple[int]]
+        l : list[tuple[int, int]]
             The list of edges such as `[(src, tgt), (src, tgt), ...]`.
         """
         for src, tgt in l:
@@ -465,7 +465,7 @@ class open_digraph:  # for opened directed graph
 
         Parameters
         ----------
-        l : list[tuple[int]]
+        l : list[tuple[int, int]]
             The list of edges such as `[(src, tgt), (src, tgt), ...]`.
         """
         for src, tgt in l:
@@ -487,16 +487,16 @@ class open_digraph:  # for opened directed graph
         """
         Return true if the graph is well formed.
         """
-        node_ids = self.get_node_ids()
+        node_ids: list[int] = self.get_node_ids()
         # check des inputs
         for i in self.get_input_ids():
-            n = self.get_node_by_id(i)
+            n: node = self.get_node_by_id(i)
             if (i not in node_ids) or (n.get_parents_ids() != []) or (len(n.get_children_ids()) != 1) or (n.get_child_multiplicity(n.get_children_ids()[0]) != 1):
                 return False
 
         # check des outputs
         for o in self.get_output_ids():
-            n = self.get_node_by_id(o)
+            n: node = self.get_node_by_id(o)
             if (o not in node_ids) or (n.get_children_ids() != []) or (len(n.get_parents_ids()) != 1) or (n.get_parent_multiplicity(n.get_parents_ids()[0]) != 1):
                 return False
 
@@ -506,12 +506,9 @@ class open_digraph:  # for opened directed graph
                 return False
 
         # check vice-versa parent-enfant
-        for n in self.get_nodes():
-            i = n.get_id()
+        for i, n in self.nodes.items():
             for j, m in n.get_children().items():
-                if (i not in self.get_node_by_id(j).get_parents_ids()):
-                    return False
-                if m != self.get_node_by_id(j).get_parent_multiplicity(i):
+                if (i not in self.get_node_by_id(j).get_parents_ids()) or (m != self.get_node_by_id(j).get_parent_multiplicity(i)):
                     return False
 
         return True
@@ -530,7 +527,7 @@ class open_digraph:  # for opened directed graph
             The id of the child of the newly created input node.
         """
         if self.get_node_by_id(identif).get_parents_ids() == []:
-            n = node(self.new_id(), "", {}, {identif: 1})
+            n: node = node(self.new_id(), "", {}, {identif: 1})
             self.add_input_id(n.get_id())
             self.nodes[n.get_id()] = n
             self.get_node_by_id(identif).add_parent_id(n.get_id())
@@ -539,15 +536,15 @@ class open_digraph:  # for opened directed graph
 
     def add_output_node(self, identif: int) -> None:
         """
-        Create an output node, child of a node with `identif` as id and a label of "". `parents` is set to `{identif}` and `children` is set to `{}`.
+        Create an output node, child of a node with `identif` as id and a label of "". `parents` is set to `{identif: 1}` and `children` is set to `{}`.
 
         Parameters
         ----------
         identif : int
-            The id of the child of the newly created output node.
+            The id of the parent of the newly created output node.
         """
         if self.get_node_by_id(identif).get_children_ids() == []:
-            n = node(self.new_id(), "", {identif: 1}, {})
+            n: node = node(self.new_id(), "", {identif: 1}, {})
             self.add_output_id(n.get_id())
             self.nodes[n.get_id()] = n
             self.get_node_by_id(identif).add_child_id(n.get_id())
