@@ -523,15 +523,14 @@ class open_digraph:  # for opened directed graph
         identif : int
             The id of the child of the newly created input node.
         """
-        if self.get_node_by_id(identif).get_parents_ids() == []:
-            newId: int = self.new_id()
-            n: node = node(newId, "", {}, {identif: 1})
+        if identif in self.nodes.keys():
+            if identif in self.inputs:
+                self.inputs.remove(identif)
+            newId: int = self.add_node(children={identif: 1})
             self.add_input_id(newId)
-            self.nodes[newId] = n
-            self.get_node_by_id(identif).add_parent_id(newId)
             return newId
         else:
-            raise Exception("Cet identifiant a déjà un parent !")
+            raise AttributeError("The specified ID isn't in the graph.")
 
     def add_output_node(self, identif: int) -> int:
         """
@@ -542,12 +541,11 @@ class open_digraph:  # for opened directed graph
         identif : int
             The id of the parent of the newly created output node.
         """
-        if self.get_node_by_id(identif).get_children_ids() == []:
-            newId: int = self.new_id()
-            n: node = node(newId, "", {identif: 1}, {})
+        if identif in self.nodes.keys():
+            if identif in self.outputs:
+                self.outputs.remove(identif)
+            newId: int = self.add_node(parents={identif: 1})
             self.add_output_id(newId)
-            self.nodes[newId] = n
-            self.get_node_by_id(identif).add_child_id(newId)
             return newId
         else:
-            raise Exception("Cet identifiant a déjà un enfant !")
+            raise AttributeError("The specified ID isn't in the graph.")
