@@ -235,10 +235,6 @@ class open_digraph:  # for opened directed graph
         """Copy the current open_digraph."""
         return open_digraph([e for e in self.inputs], [e for e in self.outputs], [e for e in list(self.nodes.values())])
 
-    def get_inputs(self) -> list[int]:
-        """Return the inputs of the current digraph."""
-        return self.inputs
-
     def get_outputs(self) -> list[int]:
         """Return the outputs of the current digraph."""
         return self.outputs
@@ -446,6 +442,7 @@ class open_digraph:  # for opened directed graph
             self.remove_parallel_edges(identif, i)
         for j in u.get_parents_ids():
             self.remove_parallel_edges(j, identif)
+        self.nodes.pop(identif)
 
     def remove_edges(self, l: list[tuple[int, int]]) -> None:
         """
@@ -517,7 +514,7 @@ class open_digraph:  # for opened directed graph
         """Assert if the graph is well formed."""
         assert self.is_well_formed(), "Le graphe n'est pas bien formé"
 
-    def add_input_node(self, identif: int) -> None:
+    def add_input_node(self, identif: int) -> int:
         """
         Create an input node, child of a node with `identif` as id and a label of "". `parents` is set to `{}` and `children` is set to `{identif: 1}`.
 
@@ -527,14 +524,16 @@ class open_digraph:  # for opened directed graph
             The id of the child of the newly created input node.
         """
         if self.get_node_by_id(identif).get_parents_ids() == []:
-            n: node = node(self.new_id(), "", {}, {identif: 1})
-            self.add_input_id(n.get_id())
-            self.nodes[n.get_id()] = n
-            self.get_node_by_id(identif).add_parent_id(n.get_id())
+            newId: int = self.new_id()
+            n: node = node(newId, "", {}, {identif: 1})
+            self.add_input_id(newId)
+            self.nodes[newId] = n
+            self.get_node_by_id(identif).add_parent_id(newId)
+            return newId
         else:
             raise Exception("Cet identifiant a déjà un parent !")
 
-    def add_output_node(self, identif: int) -> None:
+    def add_output_node(self, identif: int) -> int:
         """
         Create an output node, child of a node with `identif` as id and a label of "". `parents` is set to `{identif: 1}` and `children` is set to `{}`.
 
@@ -544,9 +543,11 @@ class open_digraph:  # for opened directed graph
             The id of the parent of the newly created output node.
         """
         if self.get_node_by_id(identif).get_children_ids() == []:
-            n: node = node(self.new_id(), "", {identif: 1}, {})
-            self.add_output_id(n.get_id())
-            self.nodes[n.get_id()] = n
-            self.get_node_by_id(identif).add_child_id(n.get_id())
+            newId: int = self.new_id()
+            n: node = node(newId, "", {identif: 1}, {})
+            self.add_output_id(newId)
+            self.nodes[newId] = n
+            self.get_node_by_id(identif).add_child_id(newId)
+            return newId
         else:
             raise Exception("Cet identifiant a déjà un enfant !")

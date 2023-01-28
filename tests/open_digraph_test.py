@@ -18,7 +18,7 @@ class InitTest(unittest.TestCase):
     def test_init_open_digraph(self):
         n0 = node(0, 'i', {}, {1: 1})
         u = open_digraph([0], [0], [n0])
-        self.assertEqual(u.get_inputs(), [0])
+        self.assertEqual(u.get_input_ids(), [0])
         self.assertEqual(u.get_outputs(), [0])
         self.assertEqual(u.get_nodes(), [n0])
 
@@ -58,6 +58,34 @@ class OpenDigraphTest(unittest.TestCase):
 
     def test_cpy(self):
         self.assertIsNot(self.G.copy(), self.G)
+
+    def test_add_node(self):
+        newId: int = self.G.add_node("d", {1: 1}, {2: 1})
+        newNode: node = self.G.get_node_by_id(newId)
+        self.assertTrue(newId in self.G.get_node_ids())
+        self.assertTrue(newNode.get_children() == {2: 1})
+        self.assertTrue(newNode.get_parents() == {1: 1})
+        self.assertTrue(newId
+                        in self.G.get_node_by_id(1).get_children_ids())
+        self.assertTrue(newId
+                        in self.G.get_node_by_id(2).get_parents_ids())
+
+    def test_remove_node(self):
+        self.G.remove_node_by_id(3)
+        self.assertFalse(3 in self.G.get_node_ids())
+        self.assertFalse(3 in self.G.get_node_by_id(0).get_parents_ids())
+
+    def test_add_input(self):
+        newId: int = self.G.add_input_node(3)
+        self.assertTrue(newId in self.G.get_node_by_id(3).get_parents_ids())
+        self.assertTrue(self.G.get_node_by_id(newId).get_children() == {3: 1})
+        self.assertTrue(newId in self.G.get_input_ids())
+
+    def test_add_output(self):
+        newId: int = self.G.add_output_node(5)
+        self.assertTrue(newId in self.G.get_node_by_id(5).get_children_ids())
+        self.assertTrue(self.G.get_node_by_id(newId).get_parents() == {5: 1})
+        self.assertTrue(newId in self.G.get_output_ids())
 
 
 if __name__ == '__main__':
