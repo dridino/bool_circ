@@ -65,10 +65,8 @@ class OpenDigraphTest(unittest.TestCase):
         self.assertTrue(newId in self.G.get_node_ids())
         self.assertTrue(newNode.get_children() == {2: 1})
         self.assertTrue(newNode.get_parents() == {1: 1})
-        self.assertTrue(newId
-                        in self.G.get_node_by_id(1).get_children_ids())
-        self.assertTrue(newId
-                        in self.G.get_node_by_id(2).get_parents_ids())
+        self.assertTrue(newId in self.G.get_node_by_id(1).get_children_ids())
+        self.assertTrue(newId in self.G.get_node_by_id(2).get_parents_ids())
 
     def test_remove_node(self):
         self.G.remove_node_by_id(3)
