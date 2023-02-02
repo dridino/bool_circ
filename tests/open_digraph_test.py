@@ -148,6 +148,23 @@ class OpenDigraphTest(unittest.TestCase):
         self.assertTrue(newId in self.G.get_output_ids())
         self.assertTrue(self.G.is_well_formed())
 
+    def test_random(self):
+        for _ in range(100):
+            self.assertTrue(open_digraph.random(
+                5, 10, form="free").is_well_formed())
+            self.assertTrue(open_digraph.random(
+                5, 10, form="free null_diag").is_well_formed())
+            self.assertTrue(open_digraph.random(
+                5, 10, form="symetric").is_well_formed())
+            self.assertTrue(open_digraph.random(
+                5, 10, form="symetric null_diag").is_well_formed())
+            self.assertTrue(open_digraph.random(
+                5, 10, form="oriented").is_well_formed())
+            self.assertTrue(open_digraph.random(
+                5, 10, form="oriented null_diag").is_well_formed())
+            self.assertTrue(open_digraph.random(
+                5, 10, form="dag").is_well_formed())
+
 
 if __name__ == '__main__':
     unittest.main()
