@@ -398,7 +398,7 @@ class open_digraph:  # for opened directed graph
 
     def split_line(self, s: str) -> tuple[str, str, str]:
         """
-        Given a string like `"id [parameters]"` returns a pair `("id", "[parameters]")`.
+        Given a string like `"id [label=..., type=...]"` returns `(id, label, type)`.
 
         Parameters
         ----------
@@ -407,7 +407,7 @@ class open_digraph:  # for opened directed graph
 
         Return
         ----------
-        A pair containing first the name of the node and then string containing its parameters.
+        Returns `(id, label, type)`.
         """
         l: list[str] = ["", "", ""]
         idx: int = 0
