@@ -1,4 +1,5 @@
 import random as random
+import os as os
 
 
 class node:
@@ -42,6 +43,10 @@ class node:
         The string representation of the node object.
         """
         return f"identif : {self.identif} | label : {self.label} | parents : {self.parents} | children : {self.children}"
+
+    def __eq__(self, other) -> bool:
+        """Return `True` if both nodes are equal."""
+        return self.identif == other.identif and self.label == other.get_label() and self.children == other.children and self.parents == other.parents
 
     def copy(self):
         """
@@ -310,6 +315,10 @@ class open_digraph:  # for opened directed graph
             s += repr(v) + "\n"
         return s
 
+    def __eq__(self, other) -> bool:
+        """Returns `True` if both graph are equal."""
+        return self.nodes == other.nodes and self.inputs == other.inputs and self.outputs == other.outputs
+
     @classmethod
     def empty(cls):
         """
@@ -386,6 +395,125 @@ class open_digraph:  # for opened directed graph
         else:
             print("\033[91m[ ! ] The combinaison you asked for is not available, refer to the doc to see what type of graph you can create.\033[0m")
             return cls.empty()
+
+    def split_line(self, s: str) -> tuple[str, str, str]:
+        """
+        Given a string like `"id [parameters]"` returns a pair `("id", "[parameters]")`.
+
+        Parameters
+        ----------
+        s : str
+            The string we want to parse
+
+        Return
+        ----------
+        A pair containing first the name of the node and then string containing its parameters.
+        """
+        l: list[str] = ["", "", ""]
+        idx: int = 0
+        i: int = 0
+        while i < len(s) - 1:
+            c: str = s[i]
+            if c == "\"":
+                temp: int = 1
+                res: str = ""
+                while s[i+temp] != "\"":
+                    res += s[i+temp]
+                    temp += 1
+                l[idx] = res
+                idx += 1
+                while s[i+temp] != "=":
+                    temp += 1
+                temp += 1
+                res = ""
+                while s[i+temp] != "]":
+                    res += s[i+temp]
+                    temp += 1
+                l[idx] = res
+                i += temp
+                return tuple(l)
+            elif c != " ":
+                l[idx] += c
+            elif idx == 0:
+                idx += 1
+                i += 6
+            i += 1
+        return tuple(l)
+
+    @classmethod
+    def from_dot_file(cls, path: str):
+        """
+        Read a graph saved in a `.dot` file specified by `path`.
+
+        Parameters
+        ----------
+        path : str
+            The location of the `.dot` file that contains the graph.
+
+        Return
+        ----------
+        Returns an `open_digraph` corresponding to this `.dot` representation.
+        """
+        inputs: list[int] = []
+        outputs: list[int] = []
+        nodes: dict[int, node] = {}
+        with open(path, "r") as f:
+            lines: list[str] = f.readlines()
+            for i, l in enumerate(lines):
+                if i != 0 and i != len(lines) - 1:
+                    if "->" not in l:
+                        name, label, t = cls.split_line(cls, l)
+                        nodes[int(name)] = node(int(name), label, {}, {})
+                        if t == "1":
+                            inputs += [int(name)]
+                        elif t == "2":
+                            outputs += [int(name)]
+                    else:
+                        temp: list[str] = l[:-2].split("->")
+                        nodes[int(temp[0])].add_child_id(int(temp[1]))
+                        nodes[int(temp[1])].add_parent_id(int(temp[0]))
+        return open_digraph(inputs, outputs, list(nodes.values()))
+
+    def save_as_dot_file(self, path: str, verbose: bool = False) -> None:
+        """
+        Save the current graph to `path`.
+
+        The field `type` of each node will be :
+            - 0 if it's a classic node
+            - 1 if it's an input node
+            - 2 if it's an output node
+
+        Parameters
+        ----------
+        path : str
+            The path where the file will be saved.
+
+        verbose : bool
+            If set to `True`, the id will be displayed below the label, otherwise only the label will be displayed.
+        """
+        content: list[str] = []
+        nodeList: list[str] = []
+
+        for identif, n in self.nodes.items():
+            t: int = 1 if identif in self.inputs else 2 if identif in self.outputs else 0
+            nodeList += [rf'{identif} [label="{n.get_label()}\nid : {n.get_id()}", type={t}];' + "\n"] if verbose else [
+                f"{identif} [label=\"{n.get_label()}\", type={t}];\n"]
+            content += [f"{identif}->{c};\n"*m for c,
+                        m in n.get_children().items()]
+
+        with open(path, "w") as f:
+            f.writelines(["digraph G {\n"] + nodeList + content + ["}"])
+
+    def display(self, verbose: bool = False) -> None:
+        """Display that current graph.
+
+        Parameters
+        ----------
+        verbose : bool
+            If set to `True`, the id will be displayed below the label, otherwise only the label will be displayed.
+        """
+        self.save_as_dot_file("temp/graph.dot", verbose)
+        os.system('dot.exe -Tpng -o "outputs/graph.png" "temp/graph.dot')
 
     def mapIntToId(self) -> dict[int, int]:
         """

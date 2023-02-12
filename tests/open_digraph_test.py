@@ -165,6 +165,17 @@ class OpenDigraphTest(unittest.TestCase):
             self.assertTrue(open_digraph.random(
                 5, 10, form="dag").is_well_formed())
 
+    def test_save(self):
+        for i in range(100):
+            t: open_digraph = open_digraph.random(
+                5, 10, form="oriented null_diag")
+            t.save_as_dot_file(f"outputs/T{i+1}.dot")
+            self.assertEqual(
+                t, open_digraph.from_dot_file(f"outputs/T{i+1}.dot"))
+
+    def test_display(self):
+        self.G.display()
+
 
 if __name__ == '__main__':
     unittest.main()
