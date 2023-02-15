@@ -268,6 +268,36 @@ class node:
         for _ in range(self.children[identif]):
             self.remove_child_once(identif)
 
+    def indegree(self) -> int:
+        """
+        Return the number of node pointing to this node.
+
+        Return
+        ----------
+        Return the number of node pointing to this node.
+        """
+        return sum([v for v in self.parents.values()])
+
+    def outdegree(self) -> int:
+        """
+        Return the number of node this node is pointing to.
+
+        Return
+        ----------
+        Return the number of node this node is pointing to.
+        """
+        return sum([v for v in self.children.values()])
+
+    def degree(self) -> int:
+        """
+        Return the number of node this node is pointing to + the number of node pointing to this node. (i.e. indegree() + outdegree())
+
+        Return
+        ----------
+        Return the number of node this node is pointing to + the number of node pointing to this node.
+        """
+        return self.indegree() + self.outdegree()
+
 
 class open_digraph:  # for opened directed graph
     def __init__(self, inputs: list[int], outputs: list[int], nodes: list[node]) -> None:
@@ -339,7 +369,7 @@ class open_digraph:  # for opened directed graph
         ----------
 
         Flags (to add after the graph name. eg : `"free null_diag"`) :
-            - `"null_diag"` : force the graph to have no node pointing directly to itself. (useless for `"diag"`)
+            - `"null_diag"` : force the graph to have no node pointing directly to itself. (useless for `"dag"`)
 
         Options :
             - `"free"`: default
@@ -513,6 +543,7 @@ class open_digraph:  # for opened directed graph
             If set to `True`, the id will be displayed below the label, otherwise only the label will be displayed.
         """
         self.save_as_dot_file("temp/graph.dot", verbose)
+        print("Saving the graph at \"outputs/graph.png\"...")
         os.system('dot.exe -Tpng -o "outputs/graph.png" "temp/graph.dot')
 
     def mapIntToId(self) -> dict[int, int]:
@@ -934,6 +965,42 @@ class open_digraph:  # for opened directed graph
         else:
             raise AttributeError("The specified ID isn't in the graph.")
 
+    def min_id(self) -> int:
+        """
+        Return the minimal `id` of the nodes in this `open_digraph`. Return -1 if there's no node in this `open_digraph`.
+
+        Return
+        ----------
+        Return the minimal `id` of the nodes in this `open_digraph`. Return -1 if there's no node in this `open_digraph`.        
+        """
+        return min(self.get_node_ids(), default=-1)
+
+    def max_id(self) -> int:
+        """
+        Return the maximal `id` of the nodes in this `open_digraph`. Return -1 if there's no node in this `open_digraph`.
+
+        Return
+        ----------
+        Return the maximal `id` of the nodes in this `open_digraph`. Return -1 if there's no node in this `open_digraph`.        
+        """
+        return max(self.get_node_ids(), default=-1)
+
+    def shift_indices(self, n: int) -> None:
+        """
+        Add `n` to every node's `id` in this `open_digraph`. `n` may be negative.
+
+        Parameters
+        ----------
+        n : `int`
+            The integer we'll add to every indice (may be negative).
+        """
+        nodes_copy: dict[int, node] = self.nodes.copy()
+        d: dict[int, node] = {}
+        for no in nodes_copy.values():
+            no.set_id(no.get_id() + n)
+            d[no.get_id()] = no
+        self.nodes = d
+
 
 class matrix:
     def __init__(self, mat: list[list[int]]) -> None:
@@ -1091,3 +1158,77 @@ class matrix:
                 G.add_edges([(i, j) for _ in range(self.matrix[i][j])])
 
         return G
+
+
+class bool_circ(open_digraph):
+    def __init__(self, g: open_digraph) -> None:
+        """
+        Create a `bool_circ` with the corresponding parameters.
+
+        Parameters
+        ----------
+        g: `open_digraph`
+            The `open_digraph` we want to create a `bool_circ` from
+
+        Return
+        ----------
+        A `bool_circ` created from `g`.
+
+        Label correspondance
+        ----------
+        - '&' -> AND
+        - '|' -> OR
+        - '~' -> NOT
+        - ''  -> COPY
+        """
+        super().__init__(g.get_input_ids(), g.get_output_ids(), g.get_nodes())
+        assert self.is_well_formed(), "The graph you provided isn't a valid bool circuit."
+
+    def copy(self):
+        """
+        Return a new instance of `bool_circ` with the same parameters.
+        """
+        return bool_circ(super().copy())
+
+    def is_cyclic(self) -> bool:
+        """
+        Return True whether this `bool_circ` is cyclic or not.
+
+        Return
+        ----------
+        Return True whether this `bool_circ` is cyclic or not.
+        """
+        if self.nodes == {}:
+            return False
+        # we select every leaf
+        leaves: list[int] = [
+            k for k, n in self.nodes.items() if n.get_children() == {}]
+        if leaves == []:
+            return True
+        else:
+            g: bool_circ = self.copy()
+            g.remove_node_by_id(leaves[0])
+            return g.is_cyclic()
+
+    def is_well_formed(self) -> bool:
+        """
+        Return True whether a `bool_circ` is well formed or not.
+        A `bool_circ` is well formed if :
+            - Every copy node has exactly an `indegree` of 1
+            - Every '&' or '|' node has exactly an `outdegree` of 1
+            - Every '~' node has exactly an `indegree` and an `outdegree` of 1
+
+        Return
+        ----------
+        True wether a `bool_circ` is well formed or not.
+        """
+        if not super().is_well_formed():
+            return False
+        for n in self.nodes.values():
+            if n.get_label() == '' and n.indegree() != 1:
+                return False
+            if (n.get_label() == '&' or n.get_label() == '|') and n.outdegree() != 1:
+                return False
+            if n.get_label() == '~' and n.indegree() != 1 and n.outdegree() != 1:
+                return False
+        return True

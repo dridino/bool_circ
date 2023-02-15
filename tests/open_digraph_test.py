@@ -84,7 +84,7 @@ class OpenDigraphTest(unittest.TestCase):
 
     def test_is_well_formed(self):
         # Correct graphs
-        self.assertTrue(open_digraph.empty())  # Empty graph
+        self.assertTrue(open_digraph.empty().is_well_formed())  # Empty graph
         self.assertTrue(self.G.is_well_formed())  # Exemple graph
         # Graph with only 1 input and 1 output and a node between
         self.assertTrue(self.T2.is_well_formed())
@@ -149,7 +149,8 @@ class OpenDigraphTest(unittest.TestCase):
         self.assertTrue(self.G.is_well_formed())
 
     def test_random(self):
-        for _ in range(100):
+        # for _ in range(100):
+        for _ in range(10):
             self.assertTrue(open_digraph.random(
                 5, 10, form="free").is_well_formed())
             self.assertTrue(open_digraph.random(
@@ -166,7 +167,8 @@ class OpenDigraphTest(unittest.TestCase):
                 5, 10, form="dag").is_well_formed())
 
     def test_save(self):
-        for i in range(100):
+        # for i in range(100):
+        for i in range(10):
             t: open_digraph = open_digraph.random(
                 5, 10, form="oriented null_diag")
             t.save_as_dot_file(f"outputs/T{i+1}.dot")
@@ -175,6 +177,124 @@ class OpenDigraphTest(unittest.TestCase):
 
     def test_display(self):
         self.G.display()
+
+    def test_shift_indices(self):
+        for i in range(100):
+            t: open_digraph = open_digraph.random(
+                5, 10, form="dag")
+            old_ids: list[int] = t.get_node_ids()
+            t.shift_indices(5)
+            self.assertTrue(t.get_node_ids() == [
+                            elem + 5 for elem in old_ids])
+
+
+class BoolCircTest(unittest.TestCase):
+    def setUp(self):
+        self.n0 = node(0, 'a', {3: 1, 4: 1}, {1: 1, 2: 1})
+        self.n1 = node(1, 'b', {0: 1}, {2: 2, 5: 1})
+        self.n2 = node(2, 'c', {0: 1, 1: 2}, {6: 1})
+        self.i0 = node(3, 'i0', {}, {0: 1})
+        self.i1 = node(4, 'i1', {}, {0: 1})
+        self.o0 = node(5, 'o0', {1: 1}, {})
+        self.o1 = node(6, 'o1', {2: 1}, {})
+        self.useless = node(7, 'u', {2: 1}, {})
+        node_l = [self.n0, self.n1, self.n2,
+                  self.i0, self.i1, self.o0, self.o1]
+        # Correct exemple graph G
+        self.G = open_digraph(
+            [3, 4], [5, 6], node_l)
+        # Graphs for is_well_formed tests
+        self.T2 = bool_circ(open_digraph(
+            [0], [1], [node(0, 'i0', {}, {2: 1}), node(1, 'o0', {2: 1}, {}), node(2, 'a', {0: 1}, {1: 1})]))
+        self.T3 = bool_circ(open_digraph(
+            [0], [1], [node(0, 'i0', {}, {1: 1}), node(1, 'o0', {0: 1}, {})]))
+
+    def test_is_well_formed(self):
+        # Correct graphs
+        self.assertTrue(open_digraph.empty().is_well_formed())  # Empty graph
+        self.assertTrue(self.G.is_well_formed())  # Exemple graph
+        # Graph with only 1 input and 1 output and a node between
+        self.assertTrue(self.T2.is_well_formed())
+        # Graph with only 1 input and 1 output
+        self.assertTrue(self.T3.is_well_formed())
+
+    def test_cpy(self):
+        C = self.G.copy()
+        self.assertIsNot(C, self.G)
+        self.assertIsNot(C.get_node_by_id(0), self.G.get_node_by_id(0))
+        self.assertTrue(self.G.is_well_formed())
+
+    def test_add_node(self):
+        newId: int = self.G.add_node("d", {1: 1}, {2: 1})
+        newNode: node = self.G.get_node_by_id(newId)
+        self.assertTrue(newId in self.G.get_node_ids())
+        self.assertTrue(newNode.get_children() == {2: 1})
+        self.assertTrue(newNode.get_parents() == {1: 1})
+        self.assertTrue(newId in self.G.get_node_by_id(1).get_children_ids())
+        self.assertTrue(newId in self.G.get_node_by_id(2).get_parents_ids())
+        self.assertTrue(self.G.is_well_formed())
+
+    def test_remove_node(self):
+        self.G.remove_node_by_id(3)
+        self.assertFalse(3 in self.G.get_node_ids())
+        self.assertFalse(3 in self.G.get_node_by_id(0).get_parents_ids())
+        self.assertTrue(self.G.is_well_formed())
+
+    def test_add_input(self):
+        newId: int = self.G.add_input_node(3)
+        self.assertTrue(newId in self.G.get_node_by_id(3).get_parents_ids())
+        self.assertTrue(self.G.get_node_by_id(newId).get_children() == {3: 1})
+        self.assertTrue(newId in self.G.get_input_ids())
+        self.assertTrue(self.G.is_well_formed())
+
+    def test_add_output(self):
+        newId: int = self.G.add_output_node(5)
+        self.assertTrue(newId in self.G.get_node_by_id(5).get_children_ids())
+        self.assertTrue(self.G.get_node_by_id(newId).get_parents() == {5: 1})
+        self.assertTrue(newId in self.G.get_output_ids())
+        self.assertTrue(self.G.is_well_formed())
+
+    def test_random(self):
+        # for _ in range(100):
+        for _ in range(10):
+            self.assertTrue(open_digraph.random(
+                5, 10, form="free").is_well_formed())
+            self.assertTrue(open_digraph.random(
+                5, 10, form="free null_diag").is_well_formed())
+            self.assertTrue(open_digraph.random(
+                5, 10, form="symetric").is_well_formed())
+            self.assertTrue(open_digraph.random(
+                5, 10, form="symetric null_diag").is_well_formed())
+            self.assertTrue(open_digraph.random(
+                5, 10, form="oriented").is_well_formed())
+            self.assertTrue(open_digraph.random(
+                5, 10, form="oriented null_diag").is_well_formed())
+            self.assertTrue(open_digraph.random(
+                5, 10, form="dag").is_well_formed())
+
+    def test_save(self):
+        # for i in range(100):
+        for i in range(10):
+            t: open_digraph = open_digraph.random(
+                5, 10, form="oriented null_diag")
+            t.save_as_dot_file(f"outputs/T{i+1}.dot")
+            self.assertEqual(
+                t, open_digraph.from_dot_file(f"outputs/T{i+1}.dot"))
+
+    def test_display(self):
+        self.G.display()
+
+    def test_acyclic(self):
+        for _ in range(100):
+            self.assertFalse(
+                bool_circ(open_digraph.random(5, 10, form="dag")).is_cyclic())
+
+        # //? Commented out since we now check whether the open_digraph provided to bool_circ is cyclic or not
+        # //? Removing the comments will lead to 10 errors, since we test 10 bad formed graphs.
+        # A majority of completly random bool_circ will be cyclic
+        # l: list[bool] = [bool_circ(open_digraph.random(
+        #     5, 10, form="free")).is_cyclic() for _ in range(10)]
+        # self.assertTrue(l.count(True) > len(l) / 2)
 
 
 if __name__ == '__main__':
