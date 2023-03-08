@@ -169,10 +169,33 @@ class node:
         ids: list[int]
             The new list of parents ids.
         """
+        tmp: list[int] = list(self.parents.keys())
         for i in range(min(len(self.parents), len(ids))):
-            k: int = list(self.parents.keys())[i]
+            k: int = tmp[i]
             self.parents[ids[i]] = self.parents[k]
             self.parents.pop(k)
+
+    def set_parents(self, new_parents: dict[int, int]) -> None:
+        """
+        Set this node's parents to `new_parents`.
+
+        Parameters
+        ----------
+        new_parents : dict[int, int]
+            The map of `{node_id : multiplicity}` that represents the new parents of this node.
+        """
+        self.parents = new_parents
+
+    def set_children(self, new_children: dict[int, int]) -> None:
+        """
+        Set this node's children to `new_children`.
+
+        Parameters
+        ----------
+        new_children : dict[int, int]
+            The map of `{node_id : multiplicity}` that represents the new children of this node.
+        """
+        self.children = new_children
 
     def set_children_ids(self, ids: list[int]) -> None:
         """
@@ -183,10 +206,11 @@ class node:
         ids: list[int]
             The new list of children ids.
         """
+        tmp: list[int] = list(self.children.keys()).copy()
         for i in range(min(len(self.children), len(ids))):
-            k: int = list(self.children.keys())[i]
+            k: int = tmp[i]
             self.children[ids[i]] = self.children[k]
-            self.parents.pop(k)
+            self.children.pop(k)
 
     def add_child_id(self, identif: int) -> None:
         """
@@ -426,6 +450,29 @@ class open_digraph:  # for opened directed graph
             print("\033[91m[ ! ] The combinaison you asked for is not available, refer to the doc to see what type of graph you can create.\033[0m")
             return cls.empty()
 
+    @classmethod
+    def identity(cls, n: int):
+        """
+        Return the identity `open_digraph` for sequential composition, with `n` inputs and `n` outputs.
+
+        Parameters:
+        ----------
+        n : int
+            The number of nodes this `open_digraph` should contain.
+
+        Return
+        ----------
+        An `open_digraph` whose inputs are only connected to the corresponding outputs
+        """
+        g = cls.empty()
+        g.set_input_ids([i for i in range(n)])
+        g.set_output_ids([i for i in range(n, 2*n)])
+        # inputs
+        g.nodes = {i: node(i, f"i{i}", {}, {i+n: 1}) for i in range(n)}
+        # outputs
+        g.nodes = {i: node(i, f"o{i}", {i-n: 1}, {}) for i in range(n, 2*n)}
+        return g
+
     def split_line(self, s: str) -> tuple[str, str, str]:
         """
         Given a string like `"id [label=..., type=...]"` returns `(id, label, type)`.
@@ -534,7 +581,7 @@ class open_digraph:  # for opened directed graph
         with open(path, "w") as f:
             f.writelines(["digraph G {\n"] + nodeList + content + ["}"])
 
-    def display(self, verbose: bool = False) -> None:
+    def display(self, verbose: bool = False, name: str = "graph.png") -> None:
         """Display that current graph.
 
         Parameters
@@ -542,9 +589,9 @@ class open_digraph:  # for opened directed graph
         verbose : bool
             If set to `True`, the id will be displayed below the label, otherwise only the label will be displayed.
         """
-        self.save_as_dot_file("temp/graph.dot", verbose)
-        print("Saving the graph at \"outputs/graph.png\"...")
-        os.system('dot.exe -Tpng -o "outputs/graph.png" "temp/graph.dot')
+        self.save_as_dot_file(f"temp/{name}.dot", verbose)
+        print(f"Saving the graph at \"outputs/{name}\"...")
+        os.system(f'dot.exe -Tpng -o "outputs/{name}" "temp/{name}.dot')
 
     def mapIntToId(self) -> dict[int, int]:
         """
@@ -994,12 +1041,169 @@ class open_digraph:  # for opened directed graph
         n : `int`
             The integer we'll add to every indice (may be negative).
         """
-        nodes_copy: dict[int, node] = self.nodes.copy()
         d: dict[int, node] = {}
-        for no in nodes_copy.values():
+        for no in self.nodes.values():
             no.set_id(no.get_id() + n)
+            no.set_parents({k+n: v for k, v in no.get_parents().items()})
+            no.set_children({k+n: v for k, v in no.get_children().items()})
             d[no.get_id()] = no
         self.nodes = d
+        self.inputs = [i+n for i in self.inputs]
+        self.outputs = [o+n for o in self.outputs]
+
+    def iparallel(self, g) -> None:
+        """
+        Add `g` to the current graph. (modify the current graph but not `g`)
+
+        Parameters
+        ----------
+        g : `open_digraph`
+            The `open_digraph` we want to add to the current one.
+        """
+        if g.nodes == {}:
+            return None
+        self.shift_indices(self.max_id() - g.min_id() + 1)
+        for k, v in g.nodes.items():
+            self.nodes[k] = v
+        self.inputs += g.inputs
+        self.outputs += g.outputs
+
+    def parallel(self, g):
+        """
+        Merge `g` and the current `open_digraph` and return a newly created `open_digraph`.
+
+        Parameters
+        ----------
+        g : `open_digraph`
+            The `open_digraph` we want to add with the current one.
+
+        Return
+        ----------
+        Return a new `open_digraph` corresponding to the concatenation of both `open_digraph`s.
+        """
+        res = self.copy()
+        res.iparallel(g)
+        return res
+
+    def icompose(self, f) -> None:
+        """
+        Make the sequencial composition of `self` and `f`.
+
+        Parameters
+        ----------
+        f : `open_digraph`
+            The `open_digraph` we want to add before `self`
+
+        Return
+        ----------
+        Make the sequencial composition of `self` and `f`.
+        """
+        if len(self.inputs) != len(f.outputs):
+            raise ValueError(
+                "The specified `open_digraph` don't match with the current inputs.")
+
+        tmp = f.copy()
+        self.shift_indices(self.max_id() - tmp.min_id() + 1)
+
+        for i, out in enumerate(f.outputs):
+            tmp.nodes[out].add_child_id(self.inputs[i])
+
+        for k, v in tmp.nodes.items():
+            self.nodes[k] = v
+        self.set_input_ids(tmp.inputs)
+
+    def compose(self, f):
+        """
+        Make the sequencial composition of `self` and `f` without modifying any of them.
+
+        Parameters
+        ----------
+        f : `open_digraph`
+            The `open_digraph` we want to add before `self`
+
+        Return
+        ----------
+        Return a new `open_doigraph` corresponding to the sequencial composition of `self` and `f`.
+        """
+        cp = self.copy()
+        cp.icompose(f)
+        return cp
+
+    def mapInputToOutput(self, i: int, outputs: list[int]):
+        if self.nodes[i].get_children_ids() == []:
+            return i
+
+        return [self.mapInputToOutput(c, outputs) for c in self.nodes[i].get_children_ids()]
+
+    def aux(self, l: list[int], first: bool):
+        # at first, cpt = 0
+        ll: set[int] = set()
+        d: list[set[int]] = []
+        """for i in l:
+            n: node = self.nodes[i]
+            d[i] = cpt
+            if n.get_children_ids() == []:
+                cpt += 1
+            else:
+                tmp, cpt = self.aux(n.get_children_ids(), cpt)
+                for k, v in tmp.items():
+                    d[k] = v
+        return d, cpt"""
+        for i in l:
+            current: node = self.nodes[i]
+            ll.add(i)
+            if current.get_children_ids() != []:
+                for elem in self.aux(current.get_children_ids(), False)[0]:
+                    ll.add(elem)
+            if first:
+                d += [set(ll)]
+                ll = set()
+        return ll, d
+
+    def connected_components(self) -> tuple[int, dict[int, int]]:
+        """
+        Return the number of connected components and a `dict` which associate at each
+        node id in the graph an int corresponding to which "subgraph" it belongs to.
+
+        Return
+        ----------
+        Return the number of connected components and a `dict` which associate at each
+        node id in the graph an int corresponding to which "subgraph" it belongs to.
+        """
+        d: dict[int, int] = {}
+        cpt: int = 0
+        # à chaque input on associe les outputs possible
+        res: list[set[int]] = self.aux(self.inputs, True)[1]
+        for e in res[0]:
+            d[e] = cpt
+        for e in res[1:]:
+            if len(e.intersection(d.keys())) != 0:
+                for e2 in e:
+                    d[e2] = cpt
+            else:
+                cpt += 1
+                for e2 in e:
+                    d[e2] = cpt
+        return cpt+1, d
+
+    def components_list(self) -> list:
+        """
+        Return a `list` containing every independants `open_digraph` this graph is made of.
+
+        Return
+        ----------
+        Return a `list` containing every independants `open_digraph` this graph is made of.
+        """
+        res: tuple[int, dict[int, int]] = self.connected_components()
+        splitted: list[set[int]] = [
+            set([n_id for n_id, v in res[1].items() if v == i]) for i in range(res[0])]
+        l: list[open_digraph] = [open_digraph.empty() for _ in range(res[0])]
+        for i in range(res[0]):
+            l[i].nodes = {k: v for k, v in self.nodes.items()
+                          if k in splitted[i]}
+            l[i].inputs = [j for j in self.inputs if j in splitted[i]]
+            l[i].outputs = [o for o in self.outputs if o in splitted[i]]
+        return l
 
 
 class matrix:

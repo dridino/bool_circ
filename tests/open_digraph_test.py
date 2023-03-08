@@ -289,12 +289,31 @@ class BoolCircTest(unittest.TestCase):
             self.assertFalse(
                 bool_circ(open_digraph.random(5, 10, form="dag")).is_cyclic())
 
-        # //? Commented out since we now check whether the open_digraph provided to bool_circ is cyclic or not
-        # //? Removing the comments will lead to 10 errors, since we test 10 bad formed graphs.
-        # A majority of completly random bool_circ will be cyclic
-        # l: list[bool] = [bool_circ(open_digraph.random(
-        #     5, 10, form="free")).is_cyclic() for _ in range(10)]
-        # self.assertTrue(l.count(True) > len(l) / 2)
+    def test_parallel(self):
+        for _ in range(100):
+            tmp: open_digraph = open_digraph.random(5, 10, form="dag")
+            tmp2: open_digraph = open_digraph.random(5, 10, form="dag")
+            self.assertEqual(tmp, tmp.parallel(open_digraph.empty()))
+            self.assertEqual(tmp, open_digraph.empty().parallel(tmp))
+            self.assertTrue(len(tmp.parallel(tmp2).get_nodes()) ==
+                            len(tmp.get_nodes()) + len(tmp2.get_nodes()))
+            self.assertTrue(len(tmp.parallel(tmp2).get_input_ids()) == len(
+                tmp.get_input_ids()) + len(tmp2.get_input_ids()))
+            self.assertTrue(len(tmp.parallel(tmp2).get_output_ids()) == len(
+                tmp.get_output_ids()) + len(tmp2.get_output_ids()))
+
+    def test_compose(self):
+        self.T2.display(name="tmp1.png")
+        self.T3.display(name="tmp2.png")
+        self.T2.compose(self.T3).display(name="tmp3.png", verbose=True)
+        self.G.compose(self.G).display(name="composeG.png", verbose=True)
+
+    def test_connected_components(self):
+        tmp = self.G.parallel(self.G)
+        tmp.display(name="lol.png", verbose=True)
+        res: open_digraph = tmp.components_list()[0]
+        res.shift_indices(-7)
+        self.assertEqual(res, self.G)
 
 
 if __name__ == '__main__':
