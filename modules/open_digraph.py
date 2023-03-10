@@ -1205,6 +1205,95 @@ class open_digraph:  # for opened directed graph
             l[i].outputs = [o for o in self.outputs if o in splitted[i]]
         return l
 
+    def dijkstra(self, src: int, direction: int | None = None, tgt: int | None = None) -> tuple[dict[int, int], dict[int, int]]:
+        """
+        Dijkstra algorithm applied to our class.
+
+        Parameters
+        ----------
+        src : int
+            The source node
+        direction : int | None
+            The direction we want to explore :
+                - None : We explore both the parents and the children
+                - -1 : We only explore the parents
+                - 1 : We only explore the children
+        tgt : int | None
+            Make the execution faster by returning the result as soon as we're sure about the path from `src` to `tgt`
+
+        Return
+        ----------
+        Return a pair of `dict[int, int]` corresponding to the distances and the previous node id of each node.
+        """
+        q: list[int] = [src]
+        dist: dict[int, int] = {src: 0}
+        prev: dict[int, int] = {}
+
+        while q != []:
+            u: int = min(q, key=lambda x: dist[x] if x in dist else 1)
+            q.pop(q.index(u))
+            neighbours: list[int] = self.nodes[u].get_children_ids() if direction == 1 else self.nodes[u].get_parents_ids(
+            ) if direction == -1 else [*self.nodes[u].get_children_ids(), *self.nodes[u].get_parents_ids()]
+
+            for v in neighbours:
+                if v not in dist.keys():
+                    q += [v]
+                if v not in dist or dist[v] > dist[u] + 1:
+                    dist[v] = dist[u]+1
+                    prev[v] = u
+                if v == tgt:
+                    return dist, prev
+
+        return dist, prev
+
+    def shortest_path(self, u: int, v: int) -> list[int]:
+        """
+        Find the shortest path from u to v.
+
+        Parameters
+        ----------
+        u : int
+            The src node's id.
+        v : int
+            The target node's id.
+
+        Return
+        ----------
+        A list corresponding to the shortest path from `u` to `v`.
+        """
+        p: list[int] = [v]
+        m, res = self.dijkstra(u, 1, v)
+        current = v
+        while current != u:
+            current = res[current]
+            p += [current]
+        p.reverse()
+        return p
+
+    def common_ancestor_dist(self, u: int, v: int) -> dict[int, tuple[int, int]]:
+        """
+        Return a `dict` mapping each common ancestor to a tuple (dist to `u`, dist to `v`)
+
+        Parameters
+        ----------
+        u : int
+            The first node's id.
+        v : int
+            The second node's id.
+
+        Return
+        ----------
+        Return a `dict` mapping each common ancestor to a tuple (dist to `u`, dist to `v`)
+        """
+        d: dict[int, tuple[int, int]] = {}
+        ances_u: dict[int, int] = self.dijkstra(u, -1)[0]
+        ances_v: dict[int, int] = self.dijkstra(v, -1)[0]
+        for k, v in ances_u.items():
+            if k in ances_v.keys():
+                d[k] = (v, ances_v[k])
+
+        return d
+
 
 class matrix:
     def __init__(self, mat: list[list[int]]) -> None:
