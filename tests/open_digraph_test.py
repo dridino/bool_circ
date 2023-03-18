@@ -1,4 +1,6 @@
-from modules.open_digraph import *
+from modules.open_digraph import open_digraph
+from modules.node import node
+from modules.bool_circ import bool_circ
 import unittest
 import sys
 import os
@@ -188,7 +190,7 @@ class OpenDigraphTest(unittest.TestCase):
                 t, open_digraph.from_dot_file(f"outputs/T{i+1}.dot"))
 
     def test_display(self):
-        self.G.display()
+        self.G.display(verbose=True)
 
     def test_shift_indices(self):
         for i in range(100):
@@ -296,6 +298,7 @@ class OpenDigraphTest(unittest.TestCase):
 #     def test_display(self):
 #         self.G.display()
 
+
     def test_acyclic(self):
         for _ in range(100):
             self.assertFalse(
@@ -347,6 +350,20 @@ class OpenDigraphTest(unittest.TestCase):
     def test_common_ancestor_dist(self):
         self.assertEqual(self.GTD7.common_ancestor_dist(
             5, 8), {0: (2, 3), 3: (1, 2), 1: (1, 1)})
+
+    def test_topo_sort(self):
+        self.assertEqual(self.G.topo_sort(), [{3, 4}, {0}, {1}, {2, 5}, {6}])
+
+    def test_depth(self):
+        self.assertEqual(self.G.depth(), 5)
+        self.assertEqual(open_digraph.empty().depth(), -1)
+        self.assertEqual(self.G.node_depth(6), 5)
+        self.assertEqual(self.G.node_depth(4), 1)
+
+    def test_longuest_path(self):
+        self.assertEqual(self.G.longuest_path(4, 2), ([4, 0, 1, 2], 3))
+        self.assertEqual(self.G.longuest_path(3, 2), ([3, 0, 1, 2], 3))
+        self.assertEqual(self.G.longuest_path(4, 0), ([4, 0], 1))
 
 
 if __name__ == '__main__':
