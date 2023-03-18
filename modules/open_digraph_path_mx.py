@@ -1,3 +1,6 @@
+from modules.node import node
+
+
 class open_digraph_path_mx:
 
     def mapInputToOutput(self, i: int, outputs: list[int]):

@@ -1,3 +1,6 @@
+from modules.node import node
+
+
 class open_digraph_compositions_mx:
 
     def min_id(self) -> int:
