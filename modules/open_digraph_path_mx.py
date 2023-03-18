@@ -2,27 +2,9 @@ from modules.node import node
 
 
 class open_digraph_path_mx:
-
-    def mapInputToOutput(self, i: int, outputs: list[int]):
-        if self.nodes[i].get_children_ids() == []:
-            return i
-
-        return [self.mapInputToOutput(c, outputs) for c in self.nodes[i].get_children_ids()]
-
     def aux(self, l: list[int], first: bool):
-        # at first, cpt = 0
         ll: set[int] = set()
         d: list[set[int]] = []
-        """for i in l:
-            n: node = self.nodes[i]
-            d[i] = cpt
-            if n.get_children_ids() == []:
-                cpt += 1
-            else:
-                tmp, cpt = self.aux(n.get_children_ids(), cpt)
-                for k, v in tmp.items():
-                    d[k] = v
-        return d, cpt"""
         for i in l:
             current: node = self.nodes[i]
             ll.add(i)
@@ -46,7 +28,6 @@ class open_digraph_path_mx:
         """
         d: dict[int, int] = {}
         cpt: int = 0
-        # à chaque input on associe les outputs possible
         res: list[set[int]] = self.aux(self.inputs, True)[1]
         for e in res[0]:
             d[e] = cpt

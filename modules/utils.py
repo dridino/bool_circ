@@ -1,4 +1,17 @@
 def split_line(s: str) -> tuple[str, str, str]:
+    """
+    Split a string like "id [label="*label*", type=*type*]" into ("*id*", "*label*", "*type*").
+    (the spaces between fields have no impact of the resulting split)
+
+    Parameters
+    ----------
+    s : str
+        The string we want to split
+
+    Return
+    ----------
+    A triplet of strings ("*id*", "*label*", "*type*")
+    """
     idx_label: int = s.index("label") + 5
     idx_type: int = s.index("type") + 4
     identif: str = ""

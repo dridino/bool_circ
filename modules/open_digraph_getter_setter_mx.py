@@ -2,7 +2,6 @@ from modules.node import node
 
 
 class open_digraph_getter_setter_mx:
-
     def get_input_ids(self) -> list[int]:
         """
         Return

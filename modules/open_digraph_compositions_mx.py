@@ -2,7 +2,6 @@ from modules.node import node
 
 
 class open_digraph_compositions_mx:
-
     def min_id(self) -> int:
         """
         Return the minimal `id` of the nodes in this `open_digraph`. Return -1 if there's no node in this `open_digraph`.
