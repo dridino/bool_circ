@@ -183,9 +183,9 @@ class OpenDigraphTest(unittest.TestCase):
         for i in range(100):
             t: open_digraph = open_digraph.random(
                 5, 10, form="oriented null_diag")
-            t.save_as_dot_file(f"outputs/T{i+1}.dot")
+            t.save_as_dot_file(f"temp/T{i+1}.dot")
             self.assertEqual(
-                t, open_digraph.from_dot_file(f"outputs/T{i+1}.dot"))
+                t, open_digraph.from_dot_file(f"temp/T{i+1}.dot"))
 
     def test_display(self):
         self.G.display(verbose=True)

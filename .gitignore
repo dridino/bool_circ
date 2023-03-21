@@ -1,5 +1,5 @@
 __pycache__
 .gitignore
 .vscode
-outputs/
-temp/
+outputs/*
+temp/*

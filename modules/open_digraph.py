@@ -244,6 +244,7 @@ class open_digraph(open_digraph_getter_setter_mx, open_digraph_compositions_mx, 
         self.save_as_dot_file(f"temp/{name}.dot", verbose)
         print(f"Saving the graph at \"outputs/{name}\"...")
         os.system(f'dot.exe -Tpng -o "outputs/{name}" "temp/{name}.dot')
+        os.system(f'"{os.path.abspath(f"./outputs/{name}")}')
 
     def mapIntToId(self) -> dict[int, int]:
         """
