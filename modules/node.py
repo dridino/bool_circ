@@ -273,8 +273,9 @@ class node:
         identif: int
             The id of the parent node that should be totally removed.
         """
-        for _ in range(self.parents[identif]):
-            self.remove_parent_once(identif)
+        if identif in self.parents:
+            for _ in range(self.parents[identif]):
+                self.remove_parent_once(identif)
 
     def remove_child_id(self, identif: int) -> None:
         """
@@ -285,8 +286,9 @@ class node:
         identif: int
             The id of the child node that should be totally removed.
         """
-        for _ in range(self.children[identif]):
-            self.remove_child_once(identif)
+        if identif in self.children:
+            for _ in range(self.children[identif]):
+                self.remove_child_once(identif)
 
     def indegree(self) -> int:
         """

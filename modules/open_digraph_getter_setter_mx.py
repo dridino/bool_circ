@@ -246,9 +246,9 @@ class open_digraph_getter_setter_mx:
             elif identif in self.get_output_ids():
                 self.outputs.remove(identif)
             n = self.nodes.pop(identif)
-            for c in n.children:
+            for c in n.get_children():
                 self.nodes[c].remove_parent_id(identif)
-            for p in n.parents:
+            for p in n.get_parents():
                 self.nodes[p].remove_child_id(identif)
         else:
             raise ValueError("This id doesn't exist in the graph.")

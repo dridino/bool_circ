@@ -118,3 +118,34 @@ class open_digraph_compositions_mx:
         cp = self.copy()
         cp.icompose(f)
         return cp
+
+    def merge_nodes(self, n1: int, n2: int, new_label: str | None = None) -> int:
+        """
+        Merge the nodes n1 and n2 together. The label of the resulting node will either be `new_label` (if specified) or the first node's label.
+        Return the new id.
+
+        Parameters
+        ----------
+        n1 : int
+            The first node's id we want to merge
+        n2 : int
+            The second node's id.
+        new_label : str | None
+            If set, this values will be used as the new node's label, otherwise it will be the first node's label.
+
+        Return
+        ----------
+        Return the id of the new node.
+        """
+        n1_node: node = self.get_node_by_id(n1)
+        n2_node: node = self.get_node_by_id(n2)
+        identif: int = self.add_node(new_label if new_label != None else n1_node.get_label(
+        ), {}, n1_node.get_children().copy())
+        n: node = self.nodes[identif]
+
+        for k, v in n2_node.get_children().copy().items():
+            for _ in range(v):
+                n.add_child_id(k)
+        self.remove_node_by_id(n1)
+        self.remove_node_by_id(n2)
+        return identif
