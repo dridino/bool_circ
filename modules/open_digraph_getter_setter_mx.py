@@ -291,7 +291,7 @@ class open_digraph_getter_setter_mx:
 
     def add_input_node(self, identif: int) -> int:
         """
-        Create an input node, child of a node with `identif` as id and a label of "". `parents` is set to `{}` and `children` is set to `{identif: 1}`.
+        Create an input node, parent of a node with `identif` as id and a label of "". `parents` is set to `{}` and `children` is set to `{identif: 1}`.
         Raise an `AttributeError` if there's no node in the graph with `identif` as `id`.
 
         Parameters

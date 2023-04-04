@@ -41,7 +41,7 @@ class open_digraph_compositions_mx:
         self.inputs = [i+n for i in self.inputs]
         self.outputs = [o+n for o in self.outputs]
 
-    def iparallel(self, g) -> None:
+    def iparallel(self, g) -> int:
         """
         Add `g` to the current graph. (modify the current graph but not `g`)
 
@@ -49,14 +49,20 @@ class open_digraph_compositions_mx:
         ----------
         g : `open_digraph`
             The `open_digraph` we want to add to the current one.
+
+        Return
+        ----------
+        The shift value (`int`)
         """
         if g.nodes == {}:
-            return None
-        self.shift_indices(self.max_id() - g.min_id() + 1)
+            return 0
+        n: int = self.max_id() - g.min_id() + 1
+        self.shift_indices(n)
         for k, v in g.nodes.items():
             self.nodes[k] = v
         self.inputs += g.inputs
         self.outputs += g.outputs
+        return n
 
     def parallel(self, g):
         """
@@ -113,7 +119,7 @@ class open_digraph_compositions_mx:
 
         Return
         ----------
-        Return a new `open_doigraph` corresponding to the sequencial composition of `self` and `f`.
+        Return a new `open_digraph` corresponding to the sequencial composition of `self` and `f`.
         """
         cp = self.copy()
         cp.icompose(f)

@@ -1,5 +1,6 @@
 import random as random
 import os as os
+from math import ceil
 
 from modules.utils import split_line
 from modules.node import node
@@ -361,7 +362,7 @@ class matrix(object):
         A matrix (list[list[int]]) containing `n*n` integers randomly chosen between 0 and `bound` (included).
         """
         res: list[list[int]] = [
-            [int(number_generator() * n) for _ in range(n)] for _ in range(n)]
+            [int(ceil(number_generator() * bound)) for _ in range(n)] for _ in range(n)]
         if null_diag:
             for i in range(n):
                 res[i][i] = 0
@@ -469,14 +470,24 @@ class matrix(object):
         The open_digraph corresponding to this matrix.
         """
         n: int = len(self.matrix)
+        x: int = 2
         G: open_digraph = open_digraph(
-            [] if inputs == 0 else [e[i] for i in range(
-                inputs) for e in [random.sample([i for i in range(n)], n)]],
-            [] if outputs == 0 else [e[i] for i in range(
-                outputs) for e in [random.sample([i for i in range(n)], n)]],
+            [i for i in range(
+                inputs if inputs != 0 else x)],
+            [n-i-1 for i in range(
+                outputs if outputs != 0 else x)],
             [node(i, f"{i}", {}, {}) for i in range(n)])
         for i in range(n):
             for j in range(n):
                 G.add_edges([(i, j) for _ in range(self.matrix[i][j])])
 
+        for i in G.inputs:
+            for identif in G.get_node_by_id(i).get_parents_ids():
+                G.get_node_by_id(i).remove_parent_id(identif)
+                G.get_node_by_id(identif).remove_child_id(i)
+
+        for o in G.outputs:
+            for identif in G.get_node_by_id(o).get_children_ids():
+                G.get_node_by_id(o).remove_child_id(identif)
+                G.get_node_by_id(identif).remove_parent_id(o)
         return G

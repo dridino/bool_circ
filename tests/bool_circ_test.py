@@ -104,6 +104,13 @@ class BoolCircTest(unittest.TestCase):
         tmp[0].display(
             verbose=True, name="bool_circ.png")
 
+    def test_random_bool_circ(self):
+        bool_circ.random_bool_circ(20, inputs=5, outputs=6).display(
+            verbose=True, name="random_bool_circ.png")
+
+    def test_adder(self):
+        bool_circ.adder(1).display(verbose=True)
+
 
 if __name__ == '__main__':
     unittest.main()
