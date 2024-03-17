@@ -1,25 +1,18 @@
-# Projet info
+# Projet d'Informatique du semestre 4
 
-## Adrien CHALLE, Maël MESSIN, Vincent VILLIAUMEY
-
-Projet d'informatique du semestre 4.
+Auteurs : Adrien CHALLE, Maël MESSIN, Vincent VILLIAUMEY
 
 * Rédigé en : Python
 * Librairie de test utilisée : UnitTest
 
-## Précisions
+## Descriptif
 
-* Pour avoir une version avec une doc typée (type hints), il faut être impérativement sous Python 3.11+, auquel cas vous devrez utiliser la version inscrite dans le dossier Python3.11+
-* Pour avoir une doc non-typée (c'est-à-dire sans type hints), il faudra utiliser la version Python3.11-.
+Librairie permettant de manipuler des graphes dirigés et plus particulièrement des circuits booléens.
 
-## Compilation
+## Tests
 
 Pour lancer la série de tests, vous pouvez utiliser la commande 
 
-Pour compiler et tester, vous pouvez utiliser la commande 
-
 ```sh
-python -m unittest discover ./tests/ "*_test.py" 
+python -m unittest discover ./tests/ "*_test.py"
 ```
-
-à la racine du projet choisi (Python3.11+ ou Python3.11-).
